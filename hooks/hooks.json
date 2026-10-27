@@ -1,0 +1,18 @@
+{
+  "description": "Keeps APS credentials out of Claude's view: blocks reads of .env, .pem, mykey.json and env dumps",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|NotebookEdit|Grep|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${CLAUDE_PLUGIN_ROOT}/hooks/Block-SecretAccess.ps1"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

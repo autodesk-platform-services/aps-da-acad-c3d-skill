@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: ask-output-destination-and-format
+expected_outcome: |
+  The response asks what to summarise, and where and in what form the output should go, offering a time-limited download link and a self-contained report as defaults. It avoids new library dependencies unless agreed.

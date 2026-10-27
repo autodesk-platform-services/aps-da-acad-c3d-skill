@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: revit-request-out-of-scope
+expected_outcome: |
+  The response says this skill covers AutoCAD and Civil 3D only and does not scaffold a Revit plugin from the AutoCAD or Civil templates.

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: first-workitem-body
+expected_outcome: |
+  A WorkItem body with a fully qualified activityId, object URN urls with Authorization headers, and LimitProcessingTimeSec 3600, with no heartbeat or debug arguments on a first submission.

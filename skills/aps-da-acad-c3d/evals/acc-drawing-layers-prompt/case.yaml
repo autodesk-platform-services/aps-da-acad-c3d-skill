@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: acc-drawing-layers-prompt
+expected_outcome: |
+  The response builds the layer-extraction plugin first and tests it locally, reads the project and folder from the link, explains how to resolve version 2 to an objectId and use a urn:adsk.objects url with a 3-legged token, asks for the file name, and never asks for the client secret.

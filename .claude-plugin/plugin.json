@@ -1,0 +1,5 @@
+{
+  "name": "aps-da-acad-c3d",
+  "description": "Build, test, and deploy AutoCAD and Civil 3D .NET plugins for APS Design Automation",
+  "version": "0.1.0"
+}

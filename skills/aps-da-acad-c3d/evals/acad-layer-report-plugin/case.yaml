@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: acad-layer-report-plugin
+expected_outcome: |
+  A project scaffolded from the acad template that references AutoCAD.NET.Core only, with one non-interactive command that writes layers.json, a bundle whose PackageContents.xml lists only that command, and da/activity.json plus da/params.example.json.

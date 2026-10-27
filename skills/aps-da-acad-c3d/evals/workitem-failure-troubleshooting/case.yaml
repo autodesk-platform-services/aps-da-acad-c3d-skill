@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: workitem-failure-troubleshooting
+expected_outcome: |
+  Timeout: add a heartbeat writer using Editor.WriteMessage and retry with adskHeartbeatTimeoutInMin (1 to 10) in the WorkItem arguments. Crash: offer adskDebug with uploadJobFolder true in the arguments. Neither is presented as a default for every WorkItem.

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: civil-parcel-points-da
+expected_outcome: |
+  The Civil 3D template's parcel pick is fed from the script or replaced by a parameter, AcMgd is removed or justified, AcadDir is set to the user's install folder, and the bundle and DA definitions target Civil 3D.

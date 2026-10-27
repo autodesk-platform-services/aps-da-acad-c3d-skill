@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- DA-shaped Civil 3D project.                                                          -->
+  <!-- Civil 3D runs on the AutoCAD engine in DA; see references/civil-da.md.               -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AssemblyName>RootNamespace</AssemblyName>
+    <RootNamespace>RootNamespace</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- AutoCAD.NET.Core only. The full AutoCAD.NET package (AcMgd.dll) crashes the DA engine. -->
+    <PackageReference Include="AutoCAD.NET.Core" Version="26.0.0" ExcludeAssets="runtime" />
+
+    <!-- Full implementation DLLs, the same binaries the engine already ships. ExcludeAssets keeps -->
+    <!-- a possibly mismatched copy out of the bundle. On MissingMethodException, check version    -->
+    <!-- skew against the deployed engine first.                                                    -->
+    <PackageReference Include="Civil3D.NET" Version="13.9.628" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>
