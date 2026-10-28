@@ -1,0 +1,19 @@
+# Credentials: never commit
+.env
+.env.*
+!.env.example
+*.pem
+mykey.json
+mypublickey.json
+
+# Run output: logs and reports can contain presigned URLs
+workitem-results/
+*.log
+
+# Build output
+bin/
+obj/
+temp_zip/
+*.zip
+*.bundle/Contents/*
+!*.bundle/Contents/.gitkeep

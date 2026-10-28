@@ -12,8 +12,18 @@ $AUTH_URL = "https://developer.api.autodesk.com/authentication/v2/token"
 # if present, before anything else reads $env:APS_*. Real credentials never pass
 # through Claude — the developer fills in .env themselves on their own machine.
 function Import-DotEnv {
-    param([string] $Path = "$PSScriptRoot\.env")
-    if (-not (Test-Path $Path)) { return }
+    param([string] $Path = "")
+    # Lookup order: APS_ENV_PATH, then the nearest .env in this folder or any parent folder, so one
+    # shared file in a common parent folder serves every project underneath it.
+    if (-not $Path) { $Path = $env:APS_ENV_PATH }
+    if (-not $Path) {
+        $dir = $PSScriptRoot
+        while ($dir) {
+            if (Test-Path (Join-Path $dir ".env")) { $Path = Join-Path $dir ".env"; break }
+            $dir = Split-Path $dir -Parent
+        }
+    }
+    if (-not $Path -or -not (Test-Path $Path)) { return }
     Get-Content $Path | ForEach-Object {
         $line = $_.Trim()
         if ($line -eq "" -or $line.StartsWith("#")) { return }
@@ -377,7 +387,8 @@ function Wait-WorkItem($token, $workItemId, [int]$timeoutSec = 3900) {
         Write-Host "  WorkItem SUCCEEDED" -ForegroundColor Green
     } else {
         Write-Host "  WorkItem FAILED: $($r.status)" -ForegroundColor Red
-        if ($r.reportUrl) { Write-Host "  Report: $($r.reportUrl)" -ForegroundColor Yellow }
+        # The report URL is presigned (a credential), so it is not printed; callers download the report.
+        if ($r.reportUrl) { Write-Host "  A WorkItem report is available (downloaded by the caller)." -ForegroundColor Yellow }
     }
 
     # DA's own stats breakdown — queue/download/processing/upload phases, not just our poll
@@ -409,6 +420,62 @@ function New-OSSObjectArgument([string]$bucketKey, [string]$objectKey, [Validate
     return @{ url = $urn; verb = $verb; headers = @{ Authorization = "Bearer $token" } }
 }
 
+# Fills APS_SSA_SERVICE_ACCOUNT_ID / APS_SSA_KEY_ID / APS_SSA_PRIVATE_KEY_PATH in this process only, so
+# .env needs just APS_CLIENT_ID, APS_CLIENT_SECRET, SSA_FIRST_NAME and SSA_LAST_NAME. The SSA email is
+# "<first>-<last>@<client id>.adskserviceaccount.com". Order: values already set and their PEM exists ->
+# reuse; else find the account by email (create it if there is none), then use a key whose PEM is in
+# ~/.aps (<kid>.pem, matched by file name only), else create a key and save its PEM there. Nothing is
+# written to .env, and no secret is printed. A new SSA still needs the human ACC steps (Custom Integration
+# for the client id, project membership for the SSA email).
+function Resolve-SsaConfig {
+    if ($env:APS_SSA_SERVICE_ACCOUNT_ID -and $env:APS_SSA_KEY_ID -and $env:APS_SSA_PRIVATE_KEY_PATH -and
+        (Test-Path $env:APS_SSA_PRIVATE_KEY_PATH)) { return }
+    foreach ($n in "SSA_FIRST_NAME","SSA_LAST_NAME") {
+        if (-not [Environment]::GetEnvironmentVariable($n)) { throw "Missing $n. Set it in da/.env (the SSA email is <first>-<last>@...)." }
+    }
+    $name = "$($env:SSA_FIRST_NAME)-$($env:SSA_LAST_NAME)"
+    $authBase = "https://developer.api.autodesk.com/authentication/v2"
+    $basic = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($env:APS_CLIENT_ID):$($env:APS_CLIENT_SECRET)"))
+    $t = Invoke-RestMethod -Method Post -Uri "$authBase/token" -Headers @{ Authorization = "Basic $basic" } `
+        -ContentType "application/x-www-form-urlencoded" `
+        -Body @{ grant_type = "client_credentials"; scope = "application:service_account:read application:service_account:write application:service_account_key:read application:service_account_key:write" }
+    $h = @{ Authorization = "Bearer $($t.access_token)" }
+
+    $account = @((Invoke-RestMethod -Uri "$authBase/service-accounts" -Headers $h).serviceAccounts) |
+        Where-Object { $_.email -like "$name@*" } | Select-Object -First 1
+    if ($account) {
+        Write-Host "  SSA: reusing $($account.email)" -ForegroundColor Gray
+    } else {
+        $account = Invoke-RestMethod -Method Post -Uri "$authBase/service-accounts" -Headers $h -ContentType "application/json" `
+            -Body (@{ name = $name; firstName = $env:SSA_FIRST_NAME; lastName = $env:SSA_LAST_NAME } | ConvertTo-Json)
+        Write-Host "  SSA: created $($account.email). A human must add it to the ACC project (Docs access) and register the client id under Custom Integrations." -ForegroundColor Yellow
+    }
+
+    $keyDir = Join-Path $HOME ".aps"
+    $kid = $null; $pemPath = $null
+    $existing = @()
+    try { $existing = @((Invoke-RestMethod -Uri "$authBase/service-accounts/$($account.serviceAccountId)/keys" -Headers $h).keys | ForEach-Object { $_.kid }) } catch { }
+    foreach ($k in $existing) {
+        $p = Join-Path $keyDir "$k.pem"
+        if (Test-Path $p) { $kid = $k; $pemPath = $p; break }
+    }
+    if (-not $kid) {
+        try { $key = Invoke-RestMethod -Method Post -Uri "$authBase/service-accounts/$($account.serviceAccountId)/keys" -Headers $h }
+        catch { throw "Could not create a key for $($account.email): $($_.ErrorDetails.Message). The account may be at its key limit; delete an unused key, or put the existing <kid>.pem files in $keyDir." }
+        if (-not $key.privateKey -or -not $key.kid) { throw "Key response had no kid or privateKey." }
+        New-Item -ItemType Directory -Force $keyDir | Out-Null
+        $pemPath = Join-Path $keyDir "$($key.kid).pem"
+        [IO.File]::WriteAllText($pemPath, $key.privateKey, (New-Object Text.UTF8Encoding($false)))
+        icacls $pemPath /inheritance:r /grant:r "$($env:USERNAME):(R,W)" | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Could not restrict permissions on $pemPath." }
+        $kid = $key.kid
+        Write-Host "  SSA: new key saved under $keyDir (current user only). Keep that folder: it holds the only copy of the key, and an account can have only a limited number of keys." -ForegroundColor Gray
+    }
+    $env:APS_SSA_SERVICE_ACCOUNT_ID = $account.serviceAccountId
+    $env:APS_SSA_KEY_ID = $kid
+    $env:APS_SSA_PRIVATE_KEY_PATH = $pemPath
+}
+
 # Secure Service Account (SSA) token via a signed JWT bearer assertion, so ACC/Forma files can be
 # read without a browser sign-in.
 # Needs PowerShell 7+ (RSA.ImportFromPem). Reads from the environment (loaded from da/.env):
@@ -417,9 +484,10 @@ function New-OSSObjectArgument([string]$bucketKey, [string]$objectKey, [Validate
 # Scope goes in the assertion as an array AND in the form body. The token is
 # returned, never printed.
 function Get-SsaToken([string]$scope = "data:read data:write") {
-    foreach ($name in "APS_CLIENT_ID","APS_CLIENT_SECRET","APS_SSA_SERVICE_ACCOUNT_ID","APS_SSA_KEY_ID","APS_SSA_PRIVATE_KEY_PATH") {
+    foreach ($name in "APS_CLIENT_ID","APS_CLIENT_SECRET") {
         if (-not [Environment]::GetEnvironmentVariable($name)) { throw "Missing $name. Set it in da/.env." }
     }
+    Resolve-SsaConfig
     $keyPath = $env:APS_SSA_PRIVATE_KEY_PATH
     if (-not (Test-Path $keyPath)) { throw "Private key file not found: $keyPath" }
     $aud = "https://developer.api.autodesk.com/authentication/v2/token"
@@ -495,4 +563,112 @@ function Get-ActivitySignature([string]$activityId, [string]$privateKeyPath = "$
                              [System.Security.Cryptography.RSASignaturePadding]::Pkcs1)
     } finally { $rsa.Dispose() }
     return [Convert]::ToBase64String($sig)
+}
+
+# --- Put a local file into an ACC / Forma folder -----------------------------------------------------
+# Creates the file as a new item, or as a new version when an item with that name already exists in
+# the folder. $token is an SSA (user-context) token with data:read data:write data:create, and the SSA
+# needs upload/edit permission on the folder (View and Download is not enough). Returns the item id.
+# Steps: create a storage location, upload to it with a signed S3 URL, then register the item/version.
+function Publish-FileToAccFolder($token, [string]$projectId, [string]$folderUrn, [string]$localPath, [string]$remoteName) {
+    $dm = "https://developer.api.autodesk.com"
+    $jsonApi = @{ Authorization = "Bearer $token"; "Content-Type" = "application/vnd.api+json"; Accept = "application/vnd.api+json" }
+    function Invoke-Dm([string]$method, [string]$path, $body) {
+        try { return Invoke-RestMethod -Method $method -Uri "$dm$path" -Headers $jsonApi -Body ($body | ConvertTo-Json -Depth 10) }
+        catch { throw "$method $path -> $($_.Exception.Response.StatusCode.value__): $($_.ErrorDetails.Message). 403 means the service account lacks upload permission on the folder." }
+    }
+    $localPath = (Resolve-Path $localPath).Path
+
+    # 1. Storage location in the folder
+    $storage = Invoke-Dm POST "/data/v1/projects/$projectId/storage" @{
+        jsonapi = @{ version = "1.0" }
+        data = @{ type = "objects"; attributes = @{ name = $remoteName }
+                  relationships = @{ target = @{ data = @{ type = "folders"; id = $folderUrn } } } } }
+    $storageId = $storage.data.id                        # urn:adsk.objects:os.object:<bucket>/<object>
+    if ($storageId -notmatch 'os\.object:([^/]+)/(.+)$') { throw "Unexpected storage id: $storageId" }
+    $bucket = $Matches[1]; $object = $Matches[2]
+
+    # 2. Upload with a signed S3 URL, then finalize
+    $oss = "$dm/oss/v2/buckets/$bucket/objects/$([Uri]::EscapeDataString($object))/signeds3upload"
+    $auth = @{ Authorization = "Bearer $token" }
+    $up = Invoke-RestMethod -Uri "$oss`?parts=1&minutesExpiration=30" -Headers $auth
+    $bytes = [IO.File]::ReadAllBytes($localPath)
+    Invoke-RestMethod -Method Put -Uri $up.urls[0] -Body $bytes -ContentType "application/octet-stream" | Out-Null
+    Invoke-RestMethod -Method Post -Uri $oss -Headers ($auth + @{ "Content-Type" = "application/json" }) `
+        -Body (@{ uploadKey = $up.uploadKey } | ConvertTo-Json) | Out-Null
+
+    # 3. New item, or new version of the existing item with this name
+    $existing = @((Invoke-RestMethod -Uri "$dm/data/v1/projects/$projectId/folders/$([Uri]::EscapeDataString($folderUrn))/contents?filter[type]=items&filter[displayName]=$([Uri]::EscapeDataString($remoteName))" -Headers $auth).data)
+    if ($existing.Count -gt 0) {
+        $itemId = $existing[0].id
+        Invoke-Dm POST "/data/v1/projects/$projectId/versions" @{
+            jsonapi = @{ version = "1.0" }
+            data = @{ type = "versions"
+                      attributes = @{ name = $remoteName; extension = @{ type = "versions:autodesk.bim360:File"; version = "1.0" } }
+                      relationships = @{ item = @{ data = @{ type = "items"; id = $itemId } }
+                                         storage = @{ data = @{ type = "objects"; id = $storageId } } } } } | Out-Null
+        Write-Host "  Added a new version of '$remoteName' in the folder." -ForegroundColor Green
+    } else {
+        $r = Invoke-Dm POST "/data/v1/projects/$projectId/items" @{
+            jsonapi = @{ version = "1.0" }
+            data = @{ type = "items"
+                      attributes = @{ displayName = $remoteName; extension = @{ type = "items:autodesk.bim360:File"; version = "1.0" } }
+                      relationships = @{ tip = @{ data = @{ type = "versions"; id = "1" } }
+                                         parent = @{ data = @{ type = "folders"; id = $folderUrn } } } }
+            included = @(@{ type = "versions"; id = "1"
+                            attributes = @{ name = $remoteName; extension = @{ type = "versions:autodesk.bim360:File"; version = "1.0" } }
+                            relationships = @{ storage = @{ data = @{ type = "objects"; id = $storageId } } } }) }
+        $itemId = $r.data.id
+        Write-Host "  Created '$remoteName' in the folder." -ForegroundColor Green
+    }
+    return $itemId
+}
+
+# --- Submit a WorkItem over the Automation WebSocket API (no polling, no callback URL needed) ---------
+# Connects to the Automation WebSocket service, posts the WorkItem, and reads status messages until a
+# terminal status. Returns an object shaped like the REST result: id, status, reportUrl, stats.
+# The WorkItem must not carry onComplete/onProgress. $signature is the signed-activity signature
+# (Get-ActivitySignature), needed when $token is an SSA or other 3-legged token. Whether the socket
+# accepts the "signatures" field must be verified live; a rejection arrives as an "error" message.
+function Submit-WorkItemViaWebSocket($token, $activityId, $alias, $arguments, [int]$limitProcessingTimeSec = 3600, [string]$signature = "") {
+    $ws  = [System.Net.WebSockets.ClientWebSocket]::new()
+    $cts = [System.Threading.CancellationTokenSource]::new([TimeSpan]::FromSeconds($limitProcessingTimeSec + 300))
+    try {
+        $ws.ConnectAsync([Uri]"wss://websockets.forgedesignautomation.io", $cts.Token).GetAwaiter().GetResult()
+        $workItem = @{ activityId = "$activityId+$alias"; arguments = $arguments; LimitProcessingTimeSec = $limitProcessingTimeSec }
+        if ($signature) { $workItem["signatures"] = @{ activityId = $signature } }
+        $payload = @{ action = "post-workitem"; data = $workItem; headers = @{ Authorization = "Bearer $token" } } |
+            ConvertTo-Json -Depth 10 -Compress
+        $bytes = [Text.Encoding]::UTF8.GetBytes($payload)
+        $ws.SendAsync([ArraySegment[byte]]::new($bytes), [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $cts.Token).GetAwaiter().GetResult()
+        Write-Host "  WorkItem posted over WebSocket" -ForegroundColor Cyan
+
+        $buffer = New-Object byte[] 8192
+        $last = ""
+        while ($true) {
+            $ms = [System.IO.MemoryStream]::new()
+            do {   # one message can span several frames
+                $r = $ws.ReceiveAsync([ArraySegment[byte]]::new($buffer), $cts.Token).GetAwaiter().GetResult()
+                if ($r.MessageType -eq [System.Net.WebSockets.WebSocketMessageType]::Close) {
+                    throw "WebSocket closed by the server before a final status ($($r.CloseStatusDescription))."
+                }
+                $ms.Write($buffer, 0, $r.Count)
+            } until ($r.EndOfMessage)
+            $msg = [Text.Encoding]::UTF8.GetString($ms.ToArray()) | ConvertFrom-Json
+            if ($msg.action -eq "error") { throw "WebSocket error: $($msg.data | ConvertTo-Json -Compress -Depth 5)" }
+            if ($msg.action -ne "status") { continue }
+            $s = $msg.data
+            if ($s.status -ne $last) { Write-Host "  Status: $($s.status)" -ForegroundColor Gray; $last = $s.status }
+            if ($s.status -notin @("pending", "inprogress")) {
+                if ($s.status -eq "success") { Write-Host "  WorkItem SUCCEEDED" -ForegroundColor Green }
+                else { Write-Host "  WorkItem FAILED: $($s.status)" -ForegroundColor Red }
+                return $s
+            }
+        }
+    } finally {
+        if ($ws.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
+            try { $ws.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "done", [System.Threading.CancellationToken]::None).GetAwaiter().GetResult() } catch { }
+        }
+        $ws.Dispose(); $cts.Dispose()
+    }
 }

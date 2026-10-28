@@ -14,6 +14,9 @@ param(
     [string] $ActivityDef = "$PSScriptRoot\activity.json",
     [string] $ParamsJson  = "$PSScriptRoot\params.example.json",
     [string] $InputDwg,
+    # Register the AppBundle and Activity only; skip the test WorkItem. Use when the real input is in
+    # ACC/Forma (run Run-FormaWorkItem.ps1 next) and there is no local drawing to test with.
+    [switch] $DeployOnly,
     [string] $Owner       = "",
     [string] $Alias       = "dev",
     [string] $OutDir      = "$PSScriptRoot\workitem-results",
@@ -31,13 +34,15 @@ $ErrorActionPreference = "Stop"
 # dot-sourced above, which happens after PowerShell evaluates param() defaults.
 if (-not $Owner) { $Owner = $env:APS_NICKNAME }
 if (-not $Owner) { $Owner = Read-Host "APS app nickname (forgeapps owner prefix)" }
-if (-not $InputDwg) { Write-Error "Pass -InputDwg <seed drawing>."; exit 1 }
-if (-not (Test-Path $InputDwg)) { Write-Error "Input drawing not found: $InputDwg"; exit 1 }
+if (-not $DeployOnly) {
+    if (-not $InputDwg) { Write-Error "Pass -InputDwg <seed drawing>, or -DeployOnly to register the bundle and activity without a test WorkItem."; exit 1 }
+    if (-not (Test-Path $InputDwg)) { Write-Error "Input drawing not found: $InputDwg"; exit 1 }
+}
 # Resolve to an absolute path now — Upload-ToOSS uses raw [System.IO.FileStream], which
 # resolves relative paths against .NET's Environment.CurrentDirectory, NOT PowerShell's
 # $PWD. The two can silently differ (cd in PowerShell doesn't move .NET's CWD), so a bare
 # relative -InputDwg can resolve against the wrong directory downstream.
-$InputDwg = (Resolve-Path $InputDwg).Path
+if ($InputDwg) { $InputDwg = (Resolve-Path $InputDwg).Path }
 if (-not (Test-Path $ActivityDef)) { Write-Error "Activity definition not found: $ActivityDef"; exit 1 }
 if (-not (Test-Path $BundleDir))   { Write-Error "Bundle not found: $BundleDir — run New-Bundle.ps1 first."; exit 1 }
 if (Test-Path $ParamsJson) { $ParamsJson = (Resolve-Path $ParamsJson).Path }  # same FileStream/CWD risk as $InputDwg above
@@ -66,6 +71,11 @@ $activityBody = @{
 $activityResult = Deploy-Activity $token $activityBody
 Set-ActivityAlias $token $activity.id $Alias $activityResult.version
 
+if ($DeployOnly) {
+    Write-Host "`nDeployed $($activity.id)+$Alias. No test WorkItem was run (-DeployOnly)." -ForegroundColor Green
+    return
+}
+
 Write-Host "`n-- WorkItem --"
 $bucketKey = "$($Owner.ToLower())-aps-da-acad-c3d-test"
 Ensure-OSSBucket $token $bucketKey
@@ -73,11 +83,15 @@ Ensure-OSSBucket $token $bucketKey
 Upload-ToOSS $token $bucketKey "input.dwg" $InputDwg | Out-Null
 $inputUrl = Get-OSSSignedUrl $token $bucketKey "input.dwg" "read"
 
+# Output object name comes from the activity, so layers.json stays layers.json, result.dwg stays result.dwg.
+$outName = if ($activity.parameters.outputFile.localName) { $activity.parameters.outputFile.localName } else { "result.dwg" }
 $arguments = @{
     inputFile  = @{ url = $inputUrl }
-    outputFile = @{ url = (Get-OSSSignedUrl $token $bucketKey "result.dwg" "write") }
+    outputFile = @{ url = (Get-OSSSignedUrl $token $bucketKey $outName "write") }
 }
-if (Test-Path $ParamsJson) {
+# Only send params when the activity declares a "params" parameter; DA rejects unused arguments
+# ("Unused arguments ... params") for plugins that take no parameters.
+if ((Test-Path $ParamsJson) -and $activity.parameters.params) {
     Upload-ToOSS $token $bucketKey "params.json" $ParamsJson | Out-Null
     $arguments["params"] = @{ url = Get-OSSSignedUrl $token $bucketKey "params.json" "read" }
 }
@@ -95,9 +109,9 @@ $result     = Wait-WorkItem $token $workItemId
 
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 if ($result.status -eq "success") {
-    $downloadUrl = Get-OSSSignedUrl $token $bucketKey "result.dwg" "read"
-    Download-FromUrl $downloadUrl "$OutDir\result.dwg"
-    Write-Host "`nSUCCESS — result.dwg downloaded to $OutDir" -ForegroundColor Green
+    $downloadUrl = Get-OSSSignedUrl $token $bucketKey $outName "read"
+    Download-FromUrl $downloadUrl (Join-Path $OutDir $outName)
+    Write-Host "`nSUCCESS — $outName downloaded to $OutDir" -ForegroundColor Green
 } else {
     Write-Host "`nFAILED — status: $($result.status)" -ForegroundColor Red
     if ($result.reportUrl) {

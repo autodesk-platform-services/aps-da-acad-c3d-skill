@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: auto-not-provisioned-pair-hint
+expected_outcome: |
+  When the run output shows the service account was just created or the folder read returns 403, the response in auto mode stops, does not create extra accounts or work around the block, tells the user to switch to pair mode, and gives a ready-to-send admin message with the client id, the service account email, the project and folder link, and the menu paths, without any secret.

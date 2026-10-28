@@ -1,0 +1,13 @@
+{
+  "id": "LayerExtract",
+  "description": "Writes the layer table of the input drawing to layers.json",
+  "engine": "Autodesk.AutoCAD+26_0",
+  "commandLine": [
+    "$(engine.path)\\accoreconsole.exe /i \"$(args[inputFile].path)\" /al \"$(appbundles[LayerExtract].path)\" /s \"$(settings[script].path)\""
+  ],
+  "parameters": {
+    "inputFile": { "verb": "get", "description": "Drawing to read", "required": true, "localName": "input.dwg" },
+    "outputFile": { "verb": "put", "description": "Layer report", "required": true, "localName": "layers.json" }
+  },
+  "settings": { "script": { "value": "EXTRACTLAYERS\n" } }
+}

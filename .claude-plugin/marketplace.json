@@ -1,0 +1,14 @@
+{
+  "name": "aps-da-acad-c3d-skill",
+  "description": "Skills for building APS Design Automation apps for AutoCAD and Civil 3D.",
+  "owner": {
+    "name": "Autodesk Platform Services"
+  },
+  "plugins": [
+    {
+      "name": "aps-da-acad-c3d",
+      "source": "./",
+      "description": "Build, test, and deploy AutoCAD and Civil 3D .NET plugins for APS Design Automation, with ACC/Forma input and output."
+    }
+  ]
+}

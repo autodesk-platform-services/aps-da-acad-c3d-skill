@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: forma-minimal-prompt-auto
+expected_outcome: |
+  In auto mode, from a one-paragraph prompt with a Forma folder link, the response states its defaults in one line instead of interrogating the user, protects secrets with a gitignore first, builds from the worked layer example, runs the access probe before the Forma run, never reads or asks for credentials, plans no params file for a plugin without parameters, and ends by offering the web app with callback or WebSocket completion and no polling.

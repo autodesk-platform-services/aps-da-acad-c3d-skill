@@ -4,7 +4,7 @@ Read this when the prompt starts like: "I have a drawing in FORMA/ACC (a link), 
 
 ## Two paths: pick by where the data lives
 
-Ask this before anything else about auth. The plugin is the same either way; only identity and WorkItem arguments change.
+Settle this before anything else about auth. A link to ACC or Forma means path 2, so do not ask; ask only when it is unclear where the drawing lives. The plugin is the same either way; only identity and WorkItem arguments change.
 
 | | Path 1: confidential client | Path 2: SSA (data in ACC or Forma) |
 |---|---|---|
@@ -23,10 +23,12 @@ ACC and Forma-hosted files are reached through the same Data Management API, and
 
 1. **APS app:** Authentication, Data Management, Design Automation, and ACC Account Admin APIs enabled.
 2. **ACC account admin** adds the app's client id under Custom Integrations. Without it ACC calls fail with 403. This is a human step; tell the user early because it can take a while to get.
-3. **Create the SSA and a key.** Hand the user `templates/da/Setup-Ssa.ps1` (copied into their `da/` folder) to run in their own shell; try `-WhatIf` first. It creates or reuses the SSA, saves the private key to `~\.aps\<kid>.pem` with current-user-only permissions, fills the three `APS_SSA_*` values in `da/.env`, and prints only the SSA email. It needs `APS_CLIENT_ID` and `APS_CLIENT_SECRET` in `.env` first. Never ask for the key or the secret. Then **add the SSA email to the project** as a member with Docs access and permission on the input folder (View and Download reads the file; project admin works, but grant the least you can). To verify: `GET /construction/admin/v1/projects/<project-guid>/users?filter[email]=<ssa email>` with the SSA token (scope `account:read`).
+3. **Find or create the SSA and a key. Check before creating.** A client id is often already provisioned: it may already have an SSA that is a project member, and its key PEM may already be on the machine. A new SSA has no project access, so creating one by default sends the user back to the admin for nothing. `Resolve-SsaConfig` in `templates/da/APS-Common.ps1` therefore runs automatically inside every script that needs an SSA token, from only `SSA_FIRST_NAME` and `SSA_LAST_NAME` (email `<first>-<last>@<client id>.adskserviceaccount.com`): an account with that email is reused (it prints `SSA: reusing ...`), and only if none exists is one created (`SSA: created ...`, which means the human steps below are still to do). For the account's key it looks for `<kid>.pem` in `~\.aps` (file names only; never open a PEM) before creating a new key there with current-user-only permissions. Nothing is written to `.env`. `templates/da/Setup-Ssa.ps1` is an optional pair-mode wrapper that runs the same resolution, prints the SSA email, and with `-Link` runs `Test-FormaAccess.ps1`. Never ask for the key or the secret. Then **add the SSA email to the project** as a member with Docs access and permission on the input folder (View and Download reads the file, upload and edit is needed to put results back; project admin works, but grant the least you can). To verify: `GET /construction/admin/v1/projects/<project-guid>/users?filter[email]=<ssa email>` with the SSA token (scope `account:read`).
 4. **Choose a nickname** (up to 20 characters, `a-z A-Z 0-9 _`, no hyphen, different from the client id; set once per app). `Register-DaSigningKey` in `templates/da/APS-Common.ps1` generates the signing key pair and registers nickname plus public key in one step. Keep `mykey.json` out of git.
 5. **Deploy the plugin** under that nickname (`Deploy-And-Test-DA.ps1`). The activity and alias already exist after the first success.
 6. **Submit as the SSA:** resolve the file with the SSA token, compute `Get-ActivitySignature "<nickname>.<activity>+<alias>"`, then `Submit-WorkItem ... -signature $sig` with the SSA token. Poll with the same token. The signature is over the exact full id string, so the alias must match what you submit.
+
+**Provisioned client id is not provisioned SSA.** Custom Integration registration belongs to the client id. Project membership belongs to each SSA email. Both must hold, and a 403 from the folder probe cannot say which is missing, so name both. Never print the admin steps unconditionally, and never assume they are missing: probe first with `templates/da/Test-FormaAccess.ps1 -Link <folder link>` (a folder listing with the SSA token). Exit 0 means go on; exit 2 means it printed the admin message for the user to send (relay it, wait, re-run); exit 1 means sign-in as the SSA failed (read the message). `templates/da/Run-FormaWorkItem.ps1` does the whole ACC read, signed submit and OSS output, and it takes the output name as a parameter.
 
 A WorkItem submitted with an SSA token and no signature fails with "No public key can be found for this client" or a signature error. The fix is steps 4 and 6, not a different token.
 
@@ -66,7 +68,7 @@ Never ask for the client secret. If several files or versions match, show the ca
 Two reasonable choices; the user should pick:
 
 - **An OSS bucket.** Use the app's 2-legged token with scope `data:read data:write bucket:create bucket:read`. Create a bucket (policy `transient` is fine; a bucket that already exists returns 409, which is OK to reuse; keys are lowercase letters, digits, dash, underscore, or dot, 3 to 128 characters). Then `GET /oss/v2/buckets/<bucket>/objects/<object>/signeds3upload` returns `uploadKey` and `urls[]`; give `urls[0]` as the output `url` with `verb: "put"`. **The argument's `verb` must be `put` even if the Activity declares `post`.** After the WorkItem succeeds, finalize with `POST .../signeds3upload` and `{ "uploadKey": ... }`, then `GET .../signeds3download` to read it back. Direct PUT and GET on OSS objects are deprecated.
-- **Back into ACC.** Create a storage location in the project, upload there, and register an item or version. This needs a user-context token with `data:write`. Not exercised yet.
+- **Back into ACC or Forma.** Run `Run-FormaWorkItem.ps1 ... -PutBack` (optionally `-RemoteName`). It uses `Publish-FileToAccFolder` in `APS-Common.ps1`: create a storage location in the folder, upload with a signed S3 URL, then register a new item, or a new version if that name already exists. The result lands in the same folder as the drawing, named `<drawing>-<OutputName>` by default. The SSA token needs `data:create` and the SSA needs upload and edit permission on the folder, so run `Test-FormaAccess.ps1 -Write` first; its admin message then asks for that permission. Written but not yet verified live.
 
 ## Authorization
 
@@ -74,7 +76,7 @@ DA calls use the 2-legged app token. Only reading (or writing) ACC project files
 
 A 3-legged (SSA) token can call only `POST /workitems` and `GET /workitems/:id`; any other DA endpoint fails with "3-legged tokens are only allowed...". Submitting with one also needs the activity-id signature (checklist step 4 and 6), or it fails with "No public key can be found for this client". Use the 2-legged token for everything else.
 
-**Setting up an SSA** (what `templates/da/Setup-Ssa.ps1` automates):
+**Setting up an SSA** (what `Resolve-SsaConfig` in `APS-Common.ps1` automates):
 - Get a 2-legged admin token with scopes `application:service_account:read application:service_account:write application:service_account_key:write application:service_account_key:read`.
 - `POST https://developer.api.autodesk.com/authentication/v2/service-accounts` with `{ name, firstName, lastName }`. The response includes `serviceAccountId` and the account's `email`.
 - `POST .../service-accounts/<serviceAccountId>/keys`. The response includes `kid` and `privateKey`. **The private key can be downloaded only once**, so save it immediately to a PEM file outside the repo. If the account already exists, `GET .../service-accounts` finds it, and `GET .../service-accounts/<id>/keys` lists keys; reuse one only if its PEM is saved locally.
@@ -89,6 +91,10 @@ Keep the PEM, the key id, the service account id, the client secret, and every t
 
 ## Gotchas observed
 
+- **Creating a duplicate SSA.** A script that defaults to a fixed SSA name creates a second account next to the provisioned one. List first, reuse, and only create when none exists.
+- **A lost-looking key may exist locally.** PEM files are named by key id. Match by file name before creating another key.
+- **Output file name.** The deploy script takes the output object name from the activity's `outputFile.localName`. A hardcoded `result.dwg` made a `layers.json` look like a downloaded drawing.
+- **The secret-access hook also blocks boolean checks** such as "is `APS_SSA_*` set". In auto mode verify by running the scripts and reading their errors (`Missing APS_SSA_...`, 403), not by inspecting variables. Auto mode assumes everything is provisioned; if the scripts show it is not, tell the user to switch to pair mode.
 - Keep `.pem` private keys, `mykey.json` (the activity-signing private key), and `.env` out of git: ignore `*.pem`, `mykey.json`, and `.env` before the first commit. Run logs contain presigned URLs; do not share them.
 - Nickname: `a-z A-Z 0-9 _`, up to 20 characters, set once per app. A hyphen gives `nickname ... is invalid`.
 - `activity ... could not be found` on the signed run: the activity or alias is not under your nickname yet. Deploy it first (or clone the Autodesk activity under your nickname).

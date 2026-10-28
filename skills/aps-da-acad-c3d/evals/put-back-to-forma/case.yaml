@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: put-back-to-forma
+expected_outcome: |
+  When asked to put the result back into Forma, the response uses the skill's put-back option beside the drawing in the same folder, explains that the service account needs upload and edit permission on the folder (not just view and download), runs the probe in write mode first, and explains that an existing file name becomes a new version.

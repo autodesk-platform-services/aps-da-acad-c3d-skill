@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0" Version="1.0" ProductCode="{6B0F0C5E-2D3A-4C8E-9B51-7A4E1F2D9C30}" Name="LayerExtract.bundle" Description="Extracts the layer table to layers.json" Author="Autodesk Platform Services">
+
+    <CompanyDetails Name="Autodesk" Url="https://aps.autodesk.com" Email="aps.help@autodesk.com" />
+
+    <Components>
+        <RuntimeRequirements OS="Win64" SeriesMin="R26.0" SeriesMax="R26.0" />
+        <ComponentEntry AppName="LayerExtract" ModuleName="./Contents/LayerExtract.dll" AppDescription="Extracts the layer table to layers.json" LoadOnCommandInvocation="True" LoadOnAutoCADStartup="False">
+            <Commands GroupName="LAYEREXTRACT">
+                <Command Global="EXTRACTLAYERS" Local="EXTRACTLAYERS"/>
+            </Commands>
+        </ComponentEntry>
+    </Components>
+</ApplicationPackage>
