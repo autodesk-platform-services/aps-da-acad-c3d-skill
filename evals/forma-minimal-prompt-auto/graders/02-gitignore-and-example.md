@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-Before creating other project files, the response puts the gitignore template into the project root (appending only missing entries if one exists, never overwriting) so the environment file, PEM files, the signing key and the results folder are ignored, and it starts the plugin from the worked layer-extract example instead of writing a new plugin from scratch.
+Both of these appear in the response's steps. (1) A step that puts the gitignore template into the project root, never overwriting an existing file, comes before any step that creates the plugin, builds, or deploys (reading files does not count as creating). (2) The plugin starts from the worked layer-extract example, not from a plugin written from scratch.
