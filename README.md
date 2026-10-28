@@ -91,6 +91,7 @@ Copied into your project's `da/` folder from `skills/aps-da-acad-c3d/templates/d
 | `Deploy-And-Test-DA.ps1` | Registers the AppBundle and Activity and runs a test WorkItem on a local drawing. `-DeployOnly` skips the test WorkItem. |
 | `Test-FormaAccess.ps1` | Checks that the service account can read (with `-Write`, upload to) a Forma folder; prints the admin message if not. |
 | `Run-FormaWorkItem.ps1` | Reads a drawing from ACC or Forma, runs the Activity, saves the result. `-PutBack` uploads it back, `-UseWebSocket` reports completion over the WebSocket API, `-ShowLink` prints a time-limited download link. Started with no options it asks for each one. |
+| `Put-FileInForma.ps1` | Uploads a file that is already on disk into a Forma folder (a new file, or a new version) without running a WorkItem again. |
 | `Setup-Ssa.ps1` | Optional pair-mode helper that finds or creates the service account and can run the access check. |
 | `Reset-APSApp.ps1` | Deletes your Design Automation resources. Destructive; ask first. |
 | `gitignore.template` | The `.gitignore` the skill puts in your project. |
@@ -113,17 +114,17 @@ Copied into your project's `da/` folder from `skills/aps-da-acad-c3d/templates/d
 ```
 .claude-plugin/                  plugin.json and marketplace.json
 hooks/                           secret-access hook
-docs/                            demo prompts and the workflow design
+docs/                            the workflow design
+evals/                           eval cases for the skill (outside skills/, as the eval command requires)
 skills/aps-da-acad-c3d/
   SKILL.md                       the skill
   references/                    DA guardrails, ACC and Forma input, Civil 3D notes
   templates/                     acad, civil, civil-da, da (PowerShell), layer-extract-example
-  evals/                         eval cases for the skill
 ```
 
 ## Evals
 
-The cases under `skills/aps-da-acad-c3d/evals/` run with `claude plugin eval`. Run `claude plugin eval --help` for the options. Results are written to `evals/results/`, which is ignored by git. Check the manifests with `claude plugin validate .`.
+The cases under `evals/` run with `claude plugin eval`. Run `claude plugin eval --help` for the options. Results are written to `evals/results/`, which is ignored by git. Check the manifests with `claude plugin validate .`.
 
 ## Known gaps
 

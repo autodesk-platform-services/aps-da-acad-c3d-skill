@@ -78,7 +78,7 @@ If the prompt does not say where results should go or what they should look like
 |--------|--------------|
 | A time-limited download link (a signed URL to an OSS object) | Default for a first run and for "give me a file". Say that the link expires, and offer to re-sign it. |
 | Download to the user's machine | What `Deploy-And-Test-DA.ps1` already does. Good for testing. |
-| Back into ACC or Forma | When the input came from there and the user wants the result beside it. Run `Run-FormaWorkItem.ps1 -PutBack`. The service account needs upload permission on the folder. See `references/acc-forma-input.md`. |
+| Back into ACC or Forma | When the input came from there and the user wants the result beside it. Run `Run-FormaWorkItem.ps1 -PutBack` as part of the run, or, when the result is already on disk, `Put-FileInForma.ps1 -Link <folder link> -File <file> -RemoteName <drawing>-<file name>` without re-running the WorkItem. The service account needs upload permission on the folder. See `references/acc-forma-input.md`. |
 | Another storage service | Ask for a URL the worker can reach and the header it needs. |
 
 **What it looks like** (this decides what the plugin writes):

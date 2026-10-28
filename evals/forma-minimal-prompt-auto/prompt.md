@@ -6,3 +6,5 @@ allowed_tools: [Read, Glob, Grep, Skill, Write, Edit]
 ---
 
 Create a aps automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - The link https://acc.autodesk.com/docs/files/projects/00000000-0000-0000-0000-000000000000?folderUrn=urn%3Aadsk.wipprod%3Afs.folder%3Aco.EXAMPLEFOLDERID&viewModel=detail&moduleId=folders Use - Auto mode.
+
+This is a dry run in a session with no shell: you cannot execute commands here. Do the reading you need, then list the exact steps and commands you would run, in order.
