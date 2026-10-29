@@ -78,7 +78,7 @@ If the prompt does not say where results should go or what they should look like
 |--------|--------------|
 | A time-limited download link (a signed URL to an OSS object) | Default for a first run and for "give me a file". Say that the link expires, and offer to re-sign it. |
 | Download to the user's machine | What `Deploy-And-Test-DA.ps1` already does. Good for testing. |
-| Back into Forma | When the input came from there and the user wants the result beside it. Run `Run-FormaWorkItem.ps1 -PutBack` as part of the run, or, when the result is already on disk, `Put-FileInForma.ps1 -Link <folder link> -File <file> -RemoteName <drawing>-<file name>` without re-running the WorkItem. The service account needs upload permission on the folder. See `references/forma-input.md`. |
+| Back into Forma | When the input came from there and the user wants the result beside it. Run `Run-FormaWorkItem.ps1 -PutBack` as part of the run, or, when the result is already on disk, `Put-FileInForma.ps1 -Link <folder link> -File <file> -RemoteName <name>` without re-running the WorkItem. **Name the file exactly as the user asked** (if they said "put back layers.json", pass `-RemoteName layers.json`); only when they gave no name does the script's default `<drawing>-<file name>` apply. Put back once, with the final name: never upload a first name and then a second one, because that leaves two copies in the folder. If a file of that name already exists, it becomes a new version. The service account needs upload permission on the folder. See `references/forma-input.md`. |
 | Another storage service | Ask for a URL the worker can reach and the header it needs. |
 
 **What it looks like** (this decides what the plugin writes):

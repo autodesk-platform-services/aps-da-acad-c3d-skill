@@ -18,7 +18,7 @@ Expected: `layers.json` on local disk with 20 layers. Follow-up used in the test
 /aps-da-acad-c3d:aps-da-acad-c3d Create a aps automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - The link <Forma folder link> Then put layers.json back into Forma, in the same folder as the drawing. Use - Auto mode.
 ```
 
-Expected: `layers.json` saved locally, and `city-planning-layers.json` created in the same Forma folder as `city-planning.dwg`. Before recording, delete any existing `city-planning-layers.json` from that folder so the file is created, not versioned.
+Expected: `layers.json` saved locally, and a single `layers.json` created in the same Forma folder as `city-planning.dwg`. Before recording, delete any existing `layers.json` and `city-planning-layers.json` from that folder so the file is created, not versioned.
 
 ## 2. Local drawing
 
