@@ -8,7 +8,7 @@
     {
       "name": "aps-da-acad-c3d",
       "source": "./",
-      "description": "Build, test, and deploy AutoCAD and Civil 3D .NET plugins for APS Design Automation, with ACC/Forma input and output."
+      "description": "Build, test, and deploy AutoCAD and Civil 3D .NET plugins for APS Design Automation, with Forma input and output."
     }
   ]
 }

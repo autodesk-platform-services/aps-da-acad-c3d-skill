@@ -15,7 +15,7 @@ param(
     [string] $ParamsJson  = "$PSScriptRoot\params.example.json",
     [string] $InputDwg,
     # Register the AppBundle and Activity only; skip the test WorkItem. Use when the real input is in
-    # ACC/Forma (run Run-FormaWorkItem.ps1 next) and there is no local drawing to test with.
+    # Forma (run Run-FormaWorkItem.ps1 next) and there is no local drawing to test with.
     [switch] $DeployOnly,
     [string] $Owner       = "",
     [string] $Alias       = "dev",

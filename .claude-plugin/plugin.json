@@ -1,6 +1,6 @@
 {
   "name": "aps-da-acad-c3d",
-  "description": "Build, test, and deploy AutoCAD and Civil 3D .NET plugins for APS Design Automation. Reads drawings from local disk, a URL, or ACC/Forma, and returns results as a file, a link, or back in the folder.",
+  "description": "Build, test, and deploy AutoCAD and Civil 3D .NET plugins for APS Design Automation. Reads drawings from local disk, a URL, or Forma, and returns results as a file, a link, or back in the folder.",
   "version": "0.2.0",
   "license": "MIT",
   "author": {

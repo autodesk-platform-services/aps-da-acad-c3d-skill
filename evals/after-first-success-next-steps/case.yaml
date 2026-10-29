@@ -1,4 +1,4 @@
 schema_version: "1.1"
 name: after-first-success-next-steps
 expected_outcome: |
-  Explains that the bundle and activity persist and only the WorkItem varies, offers console, backend and web-app routes, and says ACC input and output use object URNs with a 3-legged token.
+  Explains that the bundle and activity persist and only the WorkItem varies, offers console, backend and web-app routes, and says Forma input and output use object URNs with a 3-legged token.

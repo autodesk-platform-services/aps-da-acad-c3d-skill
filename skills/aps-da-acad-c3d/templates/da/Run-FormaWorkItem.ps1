@@ -1,13 +1,13 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-    Runs an activity on a drawing stored in ACC / Forma and saves the result locally (default
+    Runs an activity on a drawing stored in Forma and saves the result locally (default
     activity LayerExtract, result layers.json; change with -Activity and -OutputName).
 
 .DESCRIPTION
     Reads the drawing with a Secure Service Account (SSA), submits a signed WorkItem as that SSA, and
     puts the result into an OSS bucket, then downloads it to -OutDir. With -PutBack the result is also
-    uploaded into the same Forma/ACC folder; with -ShowLink the time-limited download link is printed.
+    uploaded into the same Forma folder; with -ShowLink the time-limited download link is printed.
     Run Deploy-And-Test-DA.ps1 -DeployOnly first (it creates the AppBundle and Activity), and
     Test-FormaAccess.ps1. Needs the five values in .env. If mykey.json is missing it is generated and
     registered for the nickname (keep it out of git; the gitignore template covers it).
@@ -18,7 +18,7 @@
     Asks for the link, file name and every other option; Enter accepts the default shown in brackets.
 
 .EXAMPLE
-    .\Run-FormaWorkItem.ps1 -Link "<ACC folder link>" -FileName city-planning -Version 2 -PutBack
+    .\Run-FormaWorkItem.ps1 -Link "<Forma folder link>" -FileName city-planning -Version 2 -PutBack
 #>
 param(
     [string] $Link,
@@ -28,7 +28,7 @@ param(
     [string] $Activity = "LayerExtract",
     [string] $OutputName = "layers.json",  # must match the activity's outputFile localName
     [string] $OutDir  = "$PSScriptRoot\workitem-results",
-    # Also put the result into the same Forma/ACC folder as the drawing, as a new file or a new version.
+    # Also put the result into the same Forma folder as the drawing, as a new file or a new version.
     # Needs upload permission for the SSA on that folder.
     [switch] $PutBack,
     # Report completion over the Automation WebSocket API instead of polling GET workitems/:id.
@@ -80,7 +80,7 @@ if (-not $folderUrn) { throw "Link has no folderUrn. Pass the folder link." }
 # --- Tokens -----------------------------------------------------------------------------------------
 $appToken = Get-APSToken                                   # 2-legged: DA admin calls, OSS bucket
 $ssaScope = "data:read data:write code:all" + $(if ($PutBack) { " data:create" } else { "" })
-$ssaToken = Get-SsaToken $ssaScope                         # 3-legged: read ACC file, submit WorkItem, put back
+$ssaToken = Get-SsaToken $ssaScope                         # 3-legged: read Forma file, submit WorkItem, put back
 $owner = if ($env:APS_NICKNAME) { $env:APS_NICKNAME } else { Get-DANickname $appToken }
 if (-not $owner) { throw "No DA nickname. Register one first (Register-DaSigningKey)." }
 

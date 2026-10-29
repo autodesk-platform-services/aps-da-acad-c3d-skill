@@ -1,6 +1,6 @@
 # aps-da-acad-c3d
 
-A Claude Code plugin that builds, deploys, and runs AutoCAD and Civil 3D plugins on APS Design Automation. Describe what you want, for example "extract the layers of this drawing to JSON". The drawing can be on local disk, at a URL, or in ACC or Forma. You get the result as a local file, a download link, or a new file in the same ACC or Forma folder.
+A Claude Code plugin that builds, deploys, and runs AutoCAD and Civil 3D plugins on APS Design Automation. Describe what you want, for example "extract the layers of this drawing to JSON". The drawing can be on local disk, at a URL, or in Forma. You get the result as a local file, a download link, or a new file in the same Forma folder.
 
 Preview. Revit, Inventor, and Fusion are out of scope.
 
@@ -27,8 +27,8 @@ Or from a clone: `claude --plugin-dir <path to this repo>`.
    SSA_LAST_NAME=
    ```
 
-   The two `SSA_` values are for ACC or Forma input only. Claude never asks for, reads, or prints this file.
-3. For ACC or Forma input you also need a [Secure Service Account (SSA)](https://aps.autodesk.com/en/docs/ssa/v1/developers_guide/overview/). Files in ACC and Forma are protected by user permissions, so your app's own token cannot read them or write back to them. An SSA is a non-human user of your app that signs in with a key, so Design Automation can work on those files without anyone signing in.
+   The two `SSA_` values are for Forma input only. Claude never asks for, reads, or prints this file.
+3. For Forma input you also need a [Secure Service Account (SSA)](https://aps.autodesk.com/en/docs/ssa/v1/developers_guide/overview/). Files in Forma are protected by user permissions, so your app's own token cannot read them or write back to them. An SSA is a non-human user of your app that signs in with a key, so Design Automation can work on those files without anyone signing in.
 
    An admin must register your client id under Custom Integrations and add the service account to the project. The skill checks this and prints a message you can send to your admin.
 
@@ -37,7 +37,7 @@ Or from a clone: `claude --plugin-dir <path to this repo>`.
 Start Claude Code in an empty folder and give the whole request in one prompt:
 
 ```
-/aps-da-acad-c3d:aps-da-acad-c3d Create an APS automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - <ACC folder link>. Put layers.json back into Forma, in the same folder as the drawing. Use auto mode.
+/aps-da-acad-c3d:aps-da-acad-c3d Create an APS automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - <Forma folder link>. Put layers.json back into Forma, in the same folder as the drawing. Use auto mode.
 ```
 
 - **Auto mode:** Claude runs everything. It assumes your values and admin steps are in place, and stops with a "switch to pair mode" hint if not.

@@ -1,7 +1,7 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-    Uploads a local file into an ACC / Forma folder: a new file, or a new version if the name exists.
+    Uploads a local file into a Forma folder: a new file, or a new version if the name exists.
 
 .DESCRIPTION
     Use this when the result is already on disk (for example workitem-results\layers.json) and only
@@ -10,7 +10,7 @@
     Test-FormaAccess.ps1 -Write first). Needs the five values in .env. Prints no tokens or URLs.
 
 .PARAMETER Link
-    ACC or Forma folder link containing the project guid and folderUrn.
+    Forma folder link containing the project guid and folderUrn.
 
 .PARAMETER File
     Path of the local file to upload.
@@ -20,7 +20,7 @@
     <drawing name without extension>-<file name>, for example city-planning-layers.json.
 
 .EXAMPLE
-    .\Put-FileInForma.ps1 -Link "<ACC folder link>" -File .\workitem-results\layers.json -RemoteName city-planning-layers.json
+    .\Put-FileInForma.ps1 -Link "<Forma folder link>" -File .\workitem-results\layers.json -RemoteName city-planning-layers.json
 #>
 param(
     [Parameter(Mandatory)] [string] $Link,

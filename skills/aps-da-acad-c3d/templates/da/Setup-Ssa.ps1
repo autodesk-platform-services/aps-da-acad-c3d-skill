@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
     Pair-mode helper: finds or creates the Secure Service Account (SSA), makes sure its key exists,
-    and optionally checks that it can read an ACC / Forma folder.
+    and optionally checks that it can read a Forma folder.
 
 .DESCRIPTION
     A thin wrapper. The real work is Resolve-SsaConfig in APS-Common.ps1, which every run script
@@ -16,14 +16,14 @@
     No token, key or secret is printed.
 
 .PARAMETER Link
-    ACC / Forma folder link. When given, the script runs Test-FormaAccess.ps1, which prints a
+    Forma folder link. When given, the script runs Test-FormaAccess.ps1, which prints a
     ready-to-send admin message if the SSA cannot read the folder.
 
 .PARAMETER Write
     Check for upload permission too (results will be put back into the folder).
 
 .EXAMPLE
-    .\Setup-Ssa.ps1 -Link "<ACC folder link>"
+    .\Setup-Ssa.ps1 -Link "<Forma folder link>"
 #>
 param(
     [string] $FirstName,
@@ -49,4 +49,4 @@ if ($Link) {
     & "$PSScriptRoot\Test-FormaAccess.ps1" -Link $Link -Write:$Write
     exit $LASTEXITCODE
 }
-Write-Host "Pass -Link <ACC folder link> to check that this account can read (and with -Write, upload to) the folder." -ForegroundColor Yellow
+Write-Host "Pass -Link <Forma folder link> to check that this account can read (and with -Write, upload to) the folder." -ForegroundColor Yellow

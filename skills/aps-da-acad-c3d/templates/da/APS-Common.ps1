@@ -412,9 +412,9 @@ function Wait-WorkItem($token, $workItemId, [int]$timeoutSec = 3900) {
     return $r
 }
 
-# Builds a WorkItem argument that points at an OSS, ACC, or Forma object by URN, so no signed
+# Builds a WorkItem argument that points at an OSS, Forma object by URN, so no signed
 # URL is needed. Both keys are URL-encoded here. $verb is "get" (input) or "put" (output); the
-# token needs data:read or data:write respectively (3-legged for ACC/Forma buckets).
+# token needs data:read or data:write respectively (3-legged for Forma buckets).
 function New-OSSObjectArgument([string]$bucketKey, [string]$objectKey, [ValidateSet("get","put")][string]$verb, [string]$token) {
     $urn = "urn:adsk.objects:os.object:$([Uri]::EscapeDataString($bucketKey))/$([Uri]::EscapeDataString($objectKey))"
     return @{ url = $urn; verb = $verb; headers = @{ Authorization = "Bearer $token" } }
@@ -425,7 +425,7 @@ function New-OSSObjectArgument([string]$bucketKey, [string]$objectKey, [Validate
 # "<first>-<last>@<client id>.adskserviceaccount.com". Order: values already set and their PEM exists ->
 # reuse; else find the account by email (create it if there is none), then use a key whose PEM is in
 # ~/.aps (<kid>.pem, matched by file name only), else create a key and save its PEM there. Nothing is
-# written to .env, and no secret is printed. A new SSA still needs the human ACC steps (Custom Integration
+# written to .env, and no secret is printed. A new SSA still needs the human Forma steps (Custom Integration
 # for the client id, project membership for the SSA email).
 function Resolve-SsaConfig {
     if ($env:APS_SSA_SERVICE_ACCOUNT_ID -and $env:APS_SSA_KEY_ID -and $env:APS_SSA_PRIVATE_KEY_PATH -and
@@ -448,7 +448,7 @@ function Resolve-SsaConfig {
     } else {
         $account = Invoke-RestMethod -Method Post -Uri "$authBase/service-accounts" -Headers $h -ContentType "application/json" `
             -Body (@{ name = $name; firstName = $env:SSA_FIRST_NAME; lastName = $env:SSA_LAST_NAME } | ConvertTo-Json)
-        Write-Host "  SSA: created $($account.email). A human must add it to the ACC project (Docs access) and register the client id under Custom Integrations." -ForegroundColor Yellow
+        Write-Host "  SSA: created $($account.email). A human must add it to the Forma project (Docs access) and register the client id under Custom Integrations." -ForegroundColor Yellow
     }
 
     $keyDir = Join-Path $HOME ".aps"
@@ -476,7 +476,7 @@ function Resolve-SsaConfig {
     $env:APS_SSA_PRIVATE_KEY_PATH = $pemPath
 }
 
-# Secure Service Account (SSA) token via a signed JWT bearer assertion, so ACC/Forma files can be
+# Secure Service Account (SSA) token via a signed JWT bearer assertion, so Forma files can be
 # read without a browser sign-in.
 # Needs PowerShell 7+ (RSA.ImportFromPem). Reads from the environment (loaded from da/.env):
 #   APS_CLIENT_ID, APS_CLIENT_SECRET, APS_SSA_SERVICE_ACCOUNT_ID, APS_SSA_KEY_ID,
@@ -565,7 +565,7 @@ function Get-ActivitySignature([string]$activityId, [string]$privateKeyPath = "$
     return [Convert]::ToBase64String($sig)
 }
 
-# --- Put a local file into an ACC / Forma folder -----------------------------------------------------
+# --- Put a local file into a Forma folder -----------------------------------------------------
 # Creates the file as a new item, or as a new version when an item with that name already exists in
 # the folder. $token is an SSA (user-context) token with data:read data:write data:create, and the SSA
 # needs upload/edit permission on the folder (View and Download is not enough). Returns the item id.

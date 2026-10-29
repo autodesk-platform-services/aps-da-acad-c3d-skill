@@ -135,7 +135,7 @@ The status string for a heartbeat timeout is not confirmed here, so match on the
 
 `Submit-WorkItem` supports both retries: `-heartbeatTimeoutInMin <1-10>` and `-uploadJobFolder`. Neither is set by `Deploy-And-Test-DA.ps1` by default.
 
-## Object URNs for OSS, ACC, and Forma
+## Object URNs for OSS, Forma
 
 Source: an APS Automation announcement the user pasted (not re-read from the docs). Check the live docs if a run disagrees.
 
@@ -163,7 +163,7 @@ A WorkItem argument `url` can be an object URN. No signed S3 URL is needed; prep
 - `<bucket_key>` and `<object_key>` must be URL encoded.
 - Works for all Automation engines, including AutoCAD.
 - Automation builds the signed URL, refreshes an expired token, and uses multi-part upload for large files, so the one-hour signed-URL expiry no longer applies.
-- Token scope: `data:read` for an input objectId, `data:write` for an output objectId. Buckets owned by Forma or BIM360 need a user-context token: 3-legged, or a Secure Service Account token when no one can sign in (see `acc-forma-input.md`). A WorkItem submitted with that user-context token also needs a signature of the activity id (`signatures.activityId`) and an activity under your own nickname.
+- Token scope: `data:read` for an input objectId, `data:write` for an output objectId. Buckets owned by Forma or BIM360 need a user-context token: 3-legged, or a Secure Service Account token when no one can sign in (see `forma-input.md`). A WorkItem submitted with that user-context token also needs a signature of the activity id (`signatures.activityId`) and an activity under your own nickname.
 
 Finding the objectId:
 
@@ -172,4 +172,4 @@ Finding the objectId:
 | OSS | `GET Objects` returns it. | Build it directly from an existing bucket key plus a new object key; creating a storage first is optional. |
 | Forma Data Management | `GET Version`, then `response.data.relationships.storage.data.id`. | Follow the upload tutorial; at the storage step `POST projects/:project_id/storage` and use `response.data.id`. |
 
-`Get-OSSSignedUrl` in `templates/da/APS-Common.ps1` is the older signed-URL route and still works. `New-OSSObjectArgument` builds the URN form. Neither is the only way; pick the URN form when the files already sit in OSS, ACC, or Forma and no signed URL is needed. The token goes in the WorkItem, so it never belongs in a file you commit or a chat message.
+`Get-OSSSignedUrl` in `templates/da/APS-Common.ps1` is the older signed-URL route and still works. `New-OSSObjectArgument` builds the URN form. Neither is the only way; pick the URN form when the files already sit in OSS, Forma and no signed URL is needed. The token goes in the WorkItem, so it never belongs in a file you commit or a chat message.

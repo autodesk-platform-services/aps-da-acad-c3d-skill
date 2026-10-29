@@ -7,7 +7,7 @@ parent folder.
 ## 1. Forma drawing
 
 ```
-/aps-da-acad-c3d:aps-da-acad-c3d Create a aps automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - The  link <ACC folder link> Use - Auto mode.
+/aps-da-acad-c3d:aps-da-acad-c3d Create a aps automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - The  link <Forma folder link> Use - Auto mode.
 ```
 
 Expected: `layers.json` on local disk with 20 layers. Follow-up used in the test: "Put layers.json back into Forma".
@@ -15,7 +15,7 @@ Expected: `layers.json` on local disk with 20 layers. Follow-up used in the test
 ## 1b. Forma drawing, result back in the same folder (single prompt, for the recording)
 
 ```
-/aps-da-acad-c3d:aps-da-acad-c3d Create a aps automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - The link <ACC folder link> Then put layers.json back into Forma, in the same folder as the drawing. Use - Auto mode.
+/aps-da-acad-c3d:aps-da-acad-c3d Create a aps automation application to extract layers to layers.json from `city-planning.dwg` version 2 in Forma - The link <Forma folder link> Then put layers.json back into Forma, in the same folder as the drawing. Use - Auto mode.
 ```
 
 Expected: `layers.json` saved locally, and `city-planning-layers.json` created in the same Forma folder as `city-planning.dwg`. Before recording, delete any existing `city-planning-layers.json` from that folder so the file is created, not versioned.

@@ -1,22 +1,22 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-    Checks that the service account (SSA) can read an ACC / Forma folder, and prints the admin
+    Checks that the service account (SSA) can read a Forma folder, and prints the admin
     handoff when it cannot.
 
 .DESCRIPTION
     Resolves the SSA from the shared .env values (see APS-Common.ps1, Resolve-SsaConfig), gets an
     SSA token, and lists the folder. Exit code 0 means access works and nothing is printed for an
     admin. Exit code 2 means the read failed: the script prints a ready-to-send request for the
-    ACC account admin and project admin. A 403 cannot say whether the Custom Integration or the
+    Forma account admin and project admin. A 403 cannot say whether the Custom Integration or the
     project membership is missing, so both are listed. The output has no tokens, keys or secrets
     (the client id is not a secret).
 
 .PARAMETER Link
-    ACC or Forma folder link containing the project guid and folderUrn.
+    Forma folder link containing the project guid and folderUrn.
 
 .EXAMPLE
-    .\Test-FormaAccess.ps1 -Link "<ACC folder link>"
+    .\Test-FormaAccess.ps1 -Link "<Forma folder link>"
 #>
 param(
     [Parameter(Mandatory)] [string] $Link,
@@ -30,7 +30,7 @@ $ErrorActionPreference = "Stop"
 $uri = [Uri]$Link
 $folderUrn = [System.Web.HttpUtility]::ParseQueryString($uri.Query)["folderUrn"]
 if ($uri.AbsolutePath -notmatch 'projects/([0-9a-fA-F-]{36})' -or -not $folderUrn) {
-    throw "The link needs a project guid and a folderUrn. Open the folder in ACC and copy that link."
+    throw "The link needs a project guid and a folderUrn. Open the folder in Forma and copy that link."
 }
 $projectGuid = $Matches[1]
 
@@ -52,7 +52,7 @@ try {
     Write-Host "The service account cannot read the folder (HTTP $status)." -ForegroundColor Yellow
     Write-Host "Two things must be in place. A 403 does not say which one is missing, so ask for both:"
     Write-Host ""
-    Write-Host "----- Copy from here and send to your ACC admin -----"
+    Write-Host "----- Copy from here and send to your Forma admin -----"
     Write-Host "Hello, I am setting up an APS Design Automation app that reads drawings from this project."
     Write-Host "Please do these two things:"
     Write-Host ""
