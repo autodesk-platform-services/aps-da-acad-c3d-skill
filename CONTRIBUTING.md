@@ -1,8 +1,8 @@
 # Contributing
 
-This repository does not accept pull requests. Unsolicited pull requests will be closed without review.
+Thanks for helping improve this plugin. Please open an [issue](https://github.com/autodesk-platform-services/aps-da-acad-c3d-skill/issues) before you raise a pull request, so we can agree on the problem and the approach first. Pull requests without a linked issue may be closed.
 
-To report a bug, ask a question, or suggest a change, open an [issue](https://github.com/autodesk-platform-services/aps-da-acad-c3d-skill/issues). Include:
+To report a bug, ask a question, or suggest a change, an issue is all you need. Include:
 
 - what you asked Claude to do, and whether you used auto or pair mode;
 - the exact error text or the unexpected behavior;

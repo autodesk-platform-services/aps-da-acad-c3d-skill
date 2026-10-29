@@ -52,7 +52,7 @@ More prompts: `docs/prompts.md`.
 
 ## Issues
 
-Found a problem or have an idea? Please open an [issue](https://github.com/autodesk-platform-services/aps-da-acad-c3d-skill/issues). This repo does not take pull requests; see `CONTRIBUTING.md`.
+Found a problem or have an idea? Please open an [issue](https://github.com/autodesk-platform-services/aps-da-acad-c3d-skill/issues). Please open an issue before raising a pull request; see `CONTRIBUTING.md`.
 
 ## License
 
