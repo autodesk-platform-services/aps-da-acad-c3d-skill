@@ -28,7 +28,9 @@ Or from a clone: `claude --plugin-dir <path to this repo>`.
    ```
 
    The two `SSA_` values are for ACC or Forma input only. Claude never asks for, reads, or prints this file.
-3. For ACC or Forma input, an admin must register your client id under Custom Integrations and add the service account to the project. The skill checks this and prints a message you can send to your admin.
+3. For ACC or Forma input you also need a [Secure Service Account (SSA)](https://aps.autodesk.com/en/docs/ssa/v1/developers_guide/overview/). Files in ACC and Forma are protected by user permissions, so your app's own token cannot read them or write back to them. An SSA is a non-human user of your app that signs in with a key, so Design Automation can work on those files without anyone signing in.
+
+   An admin must register your client id under Custom Integrations and add the service account to the project. The skill checks this and prints a message you can send to your admin.
 
 ## Use it
 
