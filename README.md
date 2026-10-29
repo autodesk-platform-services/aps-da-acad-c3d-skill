@@ -55,7 +55,8 @@ More prompts: `docs/prompts.md`.
 
 ## Good to know
 
-- Requires Windows and PowerShell 7. AutoCAD or Civil 3D is needed only for the optional local `accoreconsole` test.
+- Built and tested on Windows with PowerShell 7. AutoCAD or Civil 3D is needed only for the optional local `accoreconsole` test.
+- macOS with PowerShell 7 is untested and may need changes. If you try it, please report what works and what doesn't in an issue.
 - Keys: the service account key is saved in `~/.aps`, and the signing key in `da/mykey.json`. The skill adds a `.gitignore` for them.
 - A hook blocks Claude from reading credential files. It matches command text, so treat it as a safety net, not a sandbox.
 - Not yet run live: the WebSocket option with a signed submit, and creating a new service account from scratch.
