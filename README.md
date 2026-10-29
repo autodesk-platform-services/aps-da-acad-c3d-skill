@@ -67,3 +67,7 @@ Found a problem or have an idea? Please open an [issue](https://github.com/autod
 ## License
 
 MIT. See `LICENSE`.
+
+## Author
+
+Madhukar Moogala, Autodesk Platform Services.
