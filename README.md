@@ -43,6 +43,14 @@ Start Claude Code in an empty folder and give the whole request in one prompt:
 - **Auto mode:** Claude runs everything. It assumes your values and admin steps are in place, and stops with a "switch to pair mode" hint if not.
 - **Pair mode (default):** Claude gives you the commands and explains each step. You run them.
 
+**Prompt guide: local test.** To test the plugin on your machine with `accoreconsole` before it goes to the cloud, end the prompt with your install folder, for example:
+
+```
+... Use auto mode. AutoCAD is installed at C:\Program Files\Autodesk\AutoCAD 2027
+```
+
+Any folder that holds `accoreconsole.exe` works. Without it the local test is skipped, and the real WorkItem is the only check.
+
 More prompts: `docs/prompts.md`.
 
 ## Good to know

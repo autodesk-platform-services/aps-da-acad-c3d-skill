@@ -16,7 +16,7 @@ Why this skill exists: DA runs a headless `accoreconsole` in an Autodesk-hosted 
 
 ## Step 0 — Pick the target and gather paths
 
-Ask once, then remember for the session. Skip any answer the user already gave. **In auto mode, do not interrogate:** take the answer from the prompt where it is there, otherwise choose a sensible default (AutoCAD, the current product year, the core data, JSON to a local file) and state your defaults in one line so the user can correct them. Ask only for what you cannot default, such as which drawing and where it lives. Ask for the install folder only when a local `accoreconsole` test is wanted.
+Ask once, then remember for the session. Skip any answer the user already gave. **In auto mode, do not interrogate:** take the answer from the prompt where it is there, otherwise choose a sensible default (AutoCAD, the current product year, the core data, JSON to a local file) and state your defaults in one line so the user can correct them. Ask only for what you cannot default, such as which drawing and where it lives. Ask for the install folder only when a local `accoreconsole` test is wanted. If the prompt already names the product's install folder (for example "AutoCAD is installed at <folder>"), use it: run the local test with `accoreconsole.exe` from that folder, and do not ask again. If the prompt gives no install folder, skip the local test and say so.
 
 | # | Ask | Used for |
 |---|-----|----------|

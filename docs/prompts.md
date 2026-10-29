@@ -27,3 +27,13 @@ Expected: `layers.json` saved locally, and `city-planning-layers.json` created i
 ```
 
 Expected: `layers.json` under `da\workitem-results`, no service account involved.
+
+## 3. Local test with accoreconsole
+
+Add the install folder at the end of any prompt so the skill runs the plugin locally before deploying. Any folder that holds `accoreconsole.exe` works.
+
+```
+/aps-da-acad-c3d:aps-da-acad-c3d Create an APS automation application to extract layers to layers.json from `city-planning.dwg` in this folder. Use auto mode. AutoCAD is installed at C:\Program Files\Autodesk\AutoCAD 2027
+```
+
+Expected: a local `accoreconsole` run that writes `layers.json`, then the cloud deploy and WorkItem.
